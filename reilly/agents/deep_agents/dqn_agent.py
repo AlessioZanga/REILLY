@@ -9,7 +9,7 @@ from .replay_memory import ReplayMemory
 
 class DQNAgent(DeepAgent, object):
 
-    __slots__ = ["_batch_size", "_sample_size", "_replay_memory"]
+    __slots__ = ["_batch_size", "_replay_memory"]
 
     def __init__(
         self,
@@ -18,16 +18,14 @@ class DQNAgent(DeepAgent, object):
         alpha: float = 0.00025,
         epsilon: float = 0.99,
         gamma: float = 0.99,
-        epsilon_decay: float = 1,
+        epsilon_decay: float = 0.99,
         batch_size: int = 32,
-        sample_size: int = int(1e3),
         replay_memory_max_size: int = int(1e5),
         *args,
         **kwargs
     ):
         super().__init__(states, actions, alpha, epsilon, gamma, epsilon_decay)
         self._batch_size = batch_size
-        self._sample_size = sample_size
         self._replay_memory = ReplayMemory(replay_memory_max_size)
 
     def _build_model(self, states: Any, actions: int) -> tf.keras.Model:
@@ -63,9 +61,9 @@ class DQNAgent(DeepAgent, object):
             self._replay_memory.insert((self._S, self._A, R, n_S, done))
             # Check if replay buffer contains enough experience and perform
             # graident descent every four step
-            if len(self._replay_memory) >= self._sample_size and kwargs['t'] % 4 == 0:
+            if len(self._replay_memory) >= self._batch_size and kwargs['t'] % 4 == 0:
                 # Sample from replay buffer
-                Ss, As, Rs, n_Ss, dones = self._replay_memory.sample(self._sample_size)
+                Ss, As, Rs, n_Ss, dones = self._replay_memory.sample(self._batch_size)
                 # Predict Q values
                 Qs = self._model.predict([n_Ss, np.ones_like(As)])
                 # Set Q values for terminal states to zero
@@ -77,7 +75,6 @@ class DQNAgent(DeepAgent, object):
                     [Ss, As],
                     As * Qs[:, None],
                     epochs=1,
-                    batch_size=self._batch_size,
                     verbose=0
                 )
         
