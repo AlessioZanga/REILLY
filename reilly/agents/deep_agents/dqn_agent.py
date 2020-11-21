@@ -85,21 +85,24 @@ class DQNAgent(DeepAgent, object):
         self._S = n_S
         self._A = self._select_action(self._S)
 
+        if done: 
+            self._epsilon *= self._e_decay
+
     def reset(self, init_state, *args, **kwargs):
         self._S = self._phi(init_state)
         self._A = self._select_action(self._S)
 
     def _select_action(self, state: Any) -> None:
-        # Predict works on batch, inputs must be numpy arrays
-        action = self._model.predict([
-            np.array([state]),
-            np.array([np.ones(self._actions)])
-        ])[0]
-        # Round, cast and extract first array from batch predict
-        action = np.round(action).astype(bool)
-        # NOTE: One and only one action must be selected,
-        #       if not so, select a random action
-        if np.sum(action) != 1:
-            action = np.zeros(self._actions, dtype=bool)
+        action = np.zeros(self._actions, dtype=bool)
+        # With probability _epsilon select a random action
+        if np.random.random() > self._epsilon:
+            # Predict works on batch, inputs must be numpy arrays
+            # and output must be squeezed
+            Q = self._model.predict([
+                np.array([state]),
+                np.array([np.ones(self._actions)])
+            ])[0]
+            action[np.argmax(Q)] = True
+        else:
             action[np.random.randint(0, len(action))] = True
         return action
