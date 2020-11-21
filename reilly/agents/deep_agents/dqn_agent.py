@@ -55,8 +55,6 @@ class DQNAgent(DeepAgent, object):
         n_S = self._phi(n_S)
 
         if kwargs['training']:
-            # NOTE: Apply reward clipping
-            R = np.sign(R)
             # Insert experience into replay buffer
             self._replay_memory.insert((self._S, self._A, R, n_S, done))
             # Check if replay buffer contains enough experience and perform
