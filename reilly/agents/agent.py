@@ -33,3 +33,7 @@ class Agent():
     @abstractmethod
     def reset(self, env, *args, **kwargs):
         pass
+
+    @abstractmethod
+    def _select_action(self, weights: List) -> None:
+        pass
