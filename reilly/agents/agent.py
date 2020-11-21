@@ -1,17 +1,19 @@
+from abc import ABC, abstractmethod
+from typing import Any, List
+
 import numpy as np
 
-from typing import List
-from abc import ABC, abstractmethod
-
 from .. import backend
+
 
 class Agent():
 
     __slots__ = [
         '_alpha', '_gamma', '_epsilon', '_e_decay', '_n_step',
-        '_A', '_S', '_episode_ended', '_actions',
+        '_S', '_A', '_episode_ended', '_actions',
     ]
 
+    _S: Any
     _A: int
 
     def __new__(cls, *args, **kwargs):
@@ -27,13 +29,13 @@ class Agent():
         return self._A
 
     @abstractmethod
-    def update(self, n_S: int, R: float, done: bool, *args, **kwargs):
+    def update(self, n_S: Any, R: float, done: bool, *args, **kwargs):
         pass
 
     @abstractmethod
-    def reset(self, env, *args, **kwargs):
+    def reset(self, init_state: Any, *args, **kwargs):
         pass
 
     @abstractmethod
-    def _select_action(self, weights: List) -> None:
+    def _select_action(self, data: Any) -> None:
         pass
