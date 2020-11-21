@@ -58,8 +58,6 @@ class Session(object):
 
     def _run_test(self, test: int, test_samples: int, render: bool = False) -> pd.DataFrame:
         self._reset_env()
-        if render:
-            self._env.render()
         out = []
         for sample in range(test_samples):
             step = 0
@@ -87,6 +85,8 @@ class Session(object):
                     'reward': reward,
                     **info
                 })
+                if render:
+                    self._env.render()
                 step += 1
             self._reset_env()
         return pd.DataFrame(out)

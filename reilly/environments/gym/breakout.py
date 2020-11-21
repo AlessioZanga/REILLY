@@ -11,7 +11,8 @@ class Breakout(GymEnvironment):
         self._env = gym.make('BreakoutDeterministic-v4')
         self.reset()
     
-    def states(self) -> Tuple(int):
+    @property
+    def states(self) -> Tuple[int]:
         return self._env.observation_space.shape
 
     def run_step(self, action, *args, **kwargs):
