@@ -46,9 +46,10 @@ class DQNAgent(DeepAgent, object):
         return model
     
     def _phi(self, state: Any) -> Any:
-        state = np.mean(state, axis=2) / 255.0      # To grayscale
-        state = state[::2, ::2].astype('float32')   # Downscaling
-        return state[:, :, np.newaxis]
+        state = tf.constant(state)
+        state = tf.image.rgb_to_grayscale(state)
+        state = tf.image.resize(state, [84, 84], method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+        return state.numpy().astype('float32')
     
     def update(self, n_S: Any, R: float, done: bool, *args, **kwargs):
         # Apply state mapping
