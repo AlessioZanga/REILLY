@@ -29,7 +29,7 @@ class ReplayMemory(Sized, object):
             for e in experience:
                 if isinstance(e, np.ndarray):
                     # If it is a Numpy array, preallocate memory using shape of array
-                    self._memory.append(np.zeros((self._max_size, *e.shape)))
+                    self._memory.append(np.zeros((self._max_size, *e.shape), dtype=e.dtype))
                 else:
                     # Else, preallocate memory using _max_size and object type
                     self._memory.append(np.empty((self._max_size), dtype=type(e)))
