@@ -24,15 +24,14 @@ class ReplayMemory(Sized, object):
 
     def insert(self, experience: List) -> None:
         # Init memory if not initilized
-        if len(self._memory) == 0:
+        if not len(self._memory):
             # For each data in experience
             for e in experience:
-                if isinstance(e, np.ndarray):
-                    # If it is a Numpy array, preallocate memory using shape of array
-                    self._memory.append(np.zeros((self._max_size, *e.shape), dtype=e.dtype))
-                else:
-                    # Else, preallocate memory using _max_size and object type
-                    self._memory.append(np.empty((self._max_size), dtype=type(e)))
+                # If it is a Numpy array, preallocate memory using shape of array
+                # else, preallocate memory using _max_size and object type
+                dtype = e.dtype if isinstance(e, np.ndarray) else type(e)
+                shape = (self._max_size, *e.shape) if isinstance(e, np.ndarray) else (self._max_size)
+                self._memory.append(np.empty(shape, dtype))
         # Append experience
         for i, e in enumerate(experience):
             self._memory[i][self._count % self._max_size] = e
@@ -43,4 +42,4 @@ class ReplayMemory(Sized, object):
         # Generata random indices without replacement
         indices = np.random.choice(len(self), size)
         # Take elements from each memory using indices
-        return [np.take(b, indices, axis=0) for b in self._memory]
+        return [np.take(m, indices, axis=0) for m in self._memory]

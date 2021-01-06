@@ -1,5 +1,6 @@
 from typing import Any
 
+import os
 import numpy as np
 import tensorflow as tf
 
@@ -9,7 +10,7 @@ from .replay_memory import ReplayMemory
 
 class DQNAgent(DeepAgent, object):
 
-    __slots__ = ["_batch_size", "_replay_memory"]
+    __slots__ = ["_batch_size", "_replay_memory", "_replace_size", "_model_star", "_steps"]
 
     def __init__(
         self,
@@ -20,7 +21,9 @@ class DQNAgent(DeepAgent, object):
         gamma: float = 0.99,
         epsilon_decay: float = 0.99,
         batch_size: int = 32,
-        replay_memory_max_size: int = int(1e5),
+        replace_size: int = int(1e5),
+        replay_memory_max_size: int = int(1e6),
+        load_model: str = None,
         *args,
         **kwargs
     ):
@@ -28,28 +31,37 @@ class DQNAgent(DeepAgent, object):
         self._batch_size = batch_size
         self._replay_memory = ReplayMemory(replay_memory_max_size)
 
+        self._steps = 0
+        self._replace_size = replace_size
+        self._model_star = self._build_model(states, actions)
+
+        if load_model:
+            self._model = tf.keras.models.load_model(load_model)
+            self._model_star = tf.keras.models.load_model(load_model)
+
     def _build_model(self, states: Any, actions: int) -> tf.keras.Model:
         # Build mockup state and apply tranformation
         states = self._phi(np.zeros(states)).shape
-
-        input_frames = tf.keras.layers.Input(states)
-        input_action = tf.keras.layers.Input((actions, ))
-        conv_0 = tf.keras.layers.Conv2D(16, 8, strides=(4, 4), activation='relu')(input_frames)
-        conv_1 = tf.keras.layers.Conv2D(32, 4, strides=(2, 2), activation='relu')(conv_0)
-        flaten = tf.keras.layers.Flatten()(conv_1)
-        hidden = tf.keras.layers.Dense(256, activation='relu')(flaten)
-        output = tf.keras.layers.Dense(actions)(hidden)
-        output_action = tf.keras.layers.Multiply()([output, input_action])
-        optimizer = tf.keras.optimizers.RMSprop(learning_rate=self._alpha, rho=0.95, epsilon=0.01)
-        model = tf.keras.Model(inputs=[input_frames, input_action], outputs=output_action)
+        model = tf.keras.Sequential([
+            tf.keras.layers.Input(states),
+            tf.keras.layers.Conv2D(16, 8, strides=(4, 4), activation='relu'),
+            tf.keras.layers.Conv2D(32, 4, strides=(2, 2), activation='relu'),
+            tf.keras.layers.Flatten(),
+            tf.keras.layers.Dense(256, activation='relu'),
+            tf.keras.layers.Dense(actions)
+        ])
+        optimizer = tf.keras.optimizers.Adam(learning_rate=self._alpha)
         model.compile(optimizer, loss='mse')
         return model
     
-    def _phi(self, state: Any) -> Any:
-        state = tf.constant(state)
-        state = tf.image.rgb_to_grayscale(state)
-        state = tf.image.resize(state, [84, 84], method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
-        return state.numpy().astype('float32')
+    def _phi(self, state: Any, weights: Any = np.array([[[.4, .6, .8, 1]]])) -> Any:
+        state = state[::2, ::2]                     # Downscale
+        state = np.sum(state, +2) * weights         # Grayscale and fading
+        state = np.sum(state, -1)                   # History aggregation
+        state = state / np.max(state)               # Normalization
+        state = state.astype(np.float32)            # Quantization
+        state = np.expand_dims(state, -1)           # Channel ordering
+        return state
     
     def update(self, n_S: Any, R: float, done: bool, *args, **kwargs):
         # Apply state mapping
@@ -58,47 +70,44 @@ class DQNAgent(DeepAgent, object):
         if kwargs['training']:
             # Insert experience into replay buffer
             self._replay_memory.insert((self._S, self._A, R, n_S, done))
-            # Check if replay buffer contains enough experience and perform
-            # graident descent every four step
-            if len(self._replay_memory) >= self._batch_size and kwargs['t'] % 4 == 0:
+            # Check if replay buffer contains enough experience
+            if len(self._replay_memory) >= self._batch_size:
                 # Sample from replay buffer
                 Ss, As, Rs, n_Ss, dones = self._replay_memory.sample(self._batch_size)
                 # Predict Q values
-                Qs = self._model.predict([n_Ss, np.ones_like(As)])
+                Qs = self._model_star.predict_on_batch(n_Ss)
                 # Set Q values for terminal states to zero
                 Qs[dones] = 0
                 # Q_values = rewards + gamma * max(Q_values)
                 Qs = Rs + self._gamma * np.max(Qs, axis=1)
                 # Update the model
-                self._model.fit(
-                    [Ss, As],
-                    As * Qs[:, None],
-                    epochs=1,
-                    verbose=0
-                )
-        
+                self._model.train_on_batch(Ss, As * Qs[:, None])
+
+        # Replace model if reached replace size
+        if not self._steps % self._replace_size:
+            self._model_star.set_weights(self._model.get_weights())
+        # Increment global steps count
+        self._steps += 1
+
         # Update current state
         self._S = n_S
         self._A = self._select_action(self._S)
 
-        if done: 
-            self._epsilon *= self._e_decay
+        if done:
+            if self._epsilon > 0.1:
+                self._epsilon *= self._e_decay
 
     def reset(self, init_state, *args, **kwargs):
         self._S = self._phi(init_state)
         self._A = self._select_action(self._S)
+        self._model.save("model.h5")
 
     def _select_action(self, state: Any) -> None:
-        action = np.zeros(self._actions, dtype=bool)
+        action = np.zeros(self._actions, dtype=np.float32)
         # With probability _epsilon select a random action
         if np.random.random() > self._epsilon:
-            # Predict works on batch, inputs must be numpy arrays
-            # and output must be squeezed
-            Q = self._model.predict([
-                np.array([state]),
-                np.array([np.ones(self._actions)])
-            ])[0]
-            action[np.argmax(Q)] = True
+            Q = self._model.predict(state[None, ...])
+            action[np.argmax(Q)] = 1
         else:
-            action[np.random.randint(0, len(action))] = True
+            action[np.random.randint(1, len(action))] = 1
         return action

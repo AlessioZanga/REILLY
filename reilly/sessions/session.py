@@ -3,6 +3,8 @@ from tqdm import trange
 
 import pandas as pd
 
+from datetime import datetime
+
 from ..agents import Agent
 from ..environments import Environment
 
@@ -20,12 +22,12 @@ class Session(object):
         self._agent = agent
         self._label = "ID: {}, Params: {}".format(id(agent), agent)
 
-    def run(self, episodes: int, test_offset: int, test_samples: int, render: bool = False, *args, **kwargs) -> pd.DataFrame:
+    def run(self, episodes: int, test_offset: int, test_samples: int, render: bool = False, save_partial: bool = False, *args, **kwargs) -> pd.DataFrame:
         out = []
         self._reset_env()
         for episode in trange(episodes, position=kwargs.get('position', 0)):
             self._run_train()
-            if (episode + 1) % test_offset == 0:
+            if not (episode + 1) % test_offset:
                 out.append(
                     self._run_test(
                         episode // test_offset,
@@ -33,6 +35,12 @@ class Session(object):
                         render
                     )
                 )
+                # Autosave results after each test
+                if save_partial:
+                    path = [self._agent, self._env]
+                    path = "-".join([p.__class__.__name__ for p in path])
+                    path += "-" + datetime.now().strftime(r"%Y%m%d-%H%M%S")
+                    pd.concat(out).to_csv(path + ".csv", index=False)
         return pd.concat(out)
 
     def _run_train(self) -> None:
@@ -43,7 +51,6 @@ class Session(object):
             next_state, reward, done, _ = self._env.run_step(
                 action,
                 id=id(self._agent),
-                mode='test',
                 t=step
             )
             self._agent.update(
@@ -67,7 +74,6 @@ class Session(object):
                 next_state, reward, done, info = self._env.run_step(
                     action,
                     id=id(self._agent),
-                    mode='test',
                     t=step
                 )
                 self._agent.update(

@@ -8,10 +8,7 @@ from .. import backend
 
 class Agent():
 
-    __slots__ = [
-        '_alpha', '_gamma', '_epsilon', '_e_decay', '_n_step',
-        '_S', '_A', '_episode_ended', '_actions',
-    ]
+    __slots__ = ['_alpha', '_gamma', '_epsilon', '_e_decay', '_n_step', '_S', '_A', '_actions']
 
     _S: Any
     _A: int

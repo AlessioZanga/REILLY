@@ -64,7 +64,6 @@ class JointSession(ABC):
                 next_state, reward, done, _ = self._env.run_step(
                     action,
                     id=agent,
-                    mode='test',
                     t=step
                 )
                 self._agents[agent].update(
@@ -91,7 +90,6 @@ class JointSession(ABC):
                 next_state, reward, done, _ = self._env.run_step(
                     action,
                     id=key,
-                    mode='test',
                     t=step
                 )
                 agent.update(
@@ -118,7 +116,6 @@ class JointSession(ABC):
                     next_state, reward, done, info = self._env.run_step(
                         action,
                         id=agent,
-                        mode='test',
                         t=step
                     )
                     self._agents[agent].update(
