@@ -1,6 +1,7 @@
 from typing import Dict, List
 from tqdm import trange
 
+import os
 import pandas as pd
 
 from datetime import datetime
@@ -22,7 +23,7 @@ class Session(object):
         self._agent = agent
         self._label = "ID: {}, Params: {}".format(id(agent), agent)
 
-    def run(self, episodes: int, test_offset: int, test_samples: int, render: bool = False, save_partial: bool = False, *args, **kwargs) -> pd.DataFrame:
+    def run(self, episodes: int, test_offset: int, test_samples: int, render: bool = False, save_partial: bool = False, save_path: str = "results", *args, **kwargs) -> pd.DataFrame:
         out = []
         self._reset_env()
         for episode in trange(episodes, position=kwargs.get('position', 0)):
@@ -37,10 +38,12 @@ class Session(object):
                 )
                 # Autosave results after each test
                 if save_partial:
+                    os.makedirs("results", exist_ok=True)
                     path = [self._agent, self._env]
                     path = "-".join([p.__class__.__name__ for p in path])
+                    path = os.path.join(save_path, path)
                     path += "-" + datetime.now().strftime(r"%Y%m%d-%H%M%S")
-                    pd.concat(out).to_csv(path + ".csv", index=False)
+                    pd.concat(out).to_csv(path + ".gz", index=False)
                     self._agent._model.save(path + ".h5")
         return pd.concat(out)
 
