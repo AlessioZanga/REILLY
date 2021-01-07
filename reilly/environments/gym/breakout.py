@@ -4,7 +4,6 @@ import gym
 
 import numpy as np
 
-from functools import cached_property
 from .abstract_gym import GymEnvironment
 
 
@@ -15,7 +14,6 @@ class Breakout(GymEnvironment):
         self._env = gym.make('BreakoutDeterministic-v4')
         self.reset()
     
-    @cached_property
     def states(self) -> Tuple[int]:
         return (*self._env.observation_space.shape, self._history)
 

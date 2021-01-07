@@ -1,4 +1,4 @@
-FROM python:3.8-slim
+FROM tensorflow/tensorflow:2.4.0
 
 # Set working directory
 WORKDIR /root/workdir
