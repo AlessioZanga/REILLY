@@ -12,7 +12,7 @@ class Breakout(GymEnvironment):
 
     def __init__(self, history: int = 4):
         self._history = history
-        self._env = gym.make('Breakout-v4')
+        self._env = gym.make('BreakoutDeterministic-v4')
         self.reset()
     
     @cached_property

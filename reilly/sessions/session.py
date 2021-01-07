@@ -41,6 +41,7 @@ class Session(object):
                     path = "-".join([p.__class__.__name__ for p in path])
                     path += "-" + datetime.now().strftime(r"%Y%m%d-%H%M%S")
                     pd.concat(out).to_csv(path + ".csv", index=False)
+                    self._agent._model.save(path + ".h5")
         return pd.concat(out)
 
     def _run_train(self) -> None:

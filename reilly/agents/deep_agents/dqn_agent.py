@@ -19,10 +19,10 @@ class DQNAgent(DeepAgent, object):
         alpha: float = 0.00025,
         epsilon: float = 0.99,
         gamma: float = 0.99,
-        epsilon_decay: float = 0.99,
+        epsilon_decay: float = 0.99995,
         batch_size: int = 32,
         replace_size: int = int(1e5),
-        replay_memory_max_size: int = int(1e6),
+        replay_memory_max_size: int = int(1e5),
         load_model: str = None,
         *args,
         **kwargs
@@ -83,24 +83,24 @@ class DQNAgent(DeepAgent, object):
                 # Update the model
                 self._model.train_on_batch(Ss, As * Qs[:, None])
 
-        # Replace model if reached replace size
-        if not self._steps % self._replace_size:
-            self._model_star.set_weights(self._model.get_weights())
-        # Increment global steps count
-        self._steps += 1
+            # Replace model if reached replace size
+            if not self._steps % self._replace_size:
+                self._model_star.set_weights(self._model.get_weights())
+            # Increment global steps count
+            self._steps += 1
+
+            # If episode done
+            if done:
+                if self._epsilon > 0.1:
+                    self._epsilon *= self._e_decay
 
         # Update current state
         self._S = n_S
         self._A = self._select_action(self._S)
 
-        if done:
-            if self._epsilon > 0.1:
-                self._epsilon *= self._e_decay
-
     def reset(self, init_state, *args, **kwargs):
         self._S = self._phi(init_state)
         self._A = self._select_action(self._S)
-        self._model.save("model.h5")
 
     def _select_action(self, state: Any) -> None:
         action = np.zeros(self._actions, dtype=np.float32)
