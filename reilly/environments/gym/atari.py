@@ -10,6 +10,7 @@ from .abstract_gym import GymEnvironment
 class AtariEnvironment(GymEnvironment):
 
     def __init__(self, name: str, history: int = 4):
+        self._name = name
         self._history = history
         self._env = gym.make(name)
         self.reset()
@@ -32,3 +33,6 @@ class AtariEnvironment(GymEnvironment):
         reset = self._env.reset()
         reset = np.stack([reset] * self._history, axis=-1)
         return reset
+    
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}-{self._name}"

@@ -40,7 +40,7 @@ class Session(object):
                 if save_partial:
                     os.makedirs("results", exist_ok=True)
                     path = [self._agent, self._env]
-                    path = "-".join([p.__class__.__name__ for p in path])
+                    path = "-".join([str(p) for p in path])
                     path = os.path.join(save_path, path)
                     path += "-" + datetime.now().strftime(r"%Y%m%d-%H%M%S")
                     pd.concat(out).to_csv(path + ".gz", index=False)

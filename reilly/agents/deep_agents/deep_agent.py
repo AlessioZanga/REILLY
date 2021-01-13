@@ -39,3 +39,6 @@ class DeepAgent(Agent, ABC, object):
     @abstractmethod
     def _build_model(self, states: Any, actions: int) -> tf.keras.Model:
         pass
+
+    def __repr__(self) -> str:
+        return self.__class__.__name__
