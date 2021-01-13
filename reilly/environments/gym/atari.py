@@ -7,11 +7,11 @@ import numpy as np
 from .abstract_gym import GymEnvironment
 
 
-class Breakout(GymEnvironment):
+class AtariEnvironment(GymEnvironment):
 
-    def __init__(self, history: int = 4):
+    def __init__(self, name: str, history: int = 4):
         self._history = history
-        self._env = gym.make('BreakoutDeterministic-v4')
+        self._env = gym.make(name)
         self.reset()
     
     @property
