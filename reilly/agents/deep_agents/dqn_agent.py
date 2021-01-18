@@ -33,6 +33,8 @@ class DQNAgent(DeepAgent, object):
 
         self._steps = 0
         self._replace_size = replace_size
+        self._weights = np.linspace(0.4, 1, states[-1])
+        self._weights = self._weights[None, None, ...]
         self._model_star = self._build_model(states, actions)
 
         if load_model:
@@ -99,8 +101,6 @@ class DQNAgent(DeepAgent, object):
         self._A = self._select_action(self._S)
 
     def reset(self, init_state, *args, **kwargs):
-        self._weights = np.linspace(0.4, 1, init_state.shape[-1])
-        self._weights = self._weights[None, None, ...]
         self._S = self._phi(init_state)
         self._A = self._select_action(self._S)
 
