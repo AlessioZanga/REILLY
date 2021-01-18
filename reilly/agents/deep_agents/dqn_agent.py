@@ -10,7 +10,7 @@ from .replay_memory import ReplayMemory
 
 class DQNAgent(DeepAgent, object):
 
-    __slots__ = ["_batch_size", "_replay_memory", "_replace_size", "_model_star", "_steps"]
+    __slots__ = ["_batch_size", "_replay_memory", "_replace_size", "_model_star", "_steps", "_weights"]
 
     def __init__(
         self,
@@ -54,9 +54,9 @@ class DQNAgent(DeepAgent, object):
         model.compile(optimizer, loss='mse')
         return model
     
-    def _phi(self, state: Any, weights: Any = np.array([[[.4, .6, .8, 1]]])) -> Any:
+    def _phi(self, state: Any) -> Any:
         state = state[::2, ::2]                     # Downscale
-        state = np.sum(state, +2) * weights         # Grayscale and fading
+        state = np.sum(state, +2) * self._weights   # Grayscale and fading
         state = np.sum(state, -1)                   # History aggregation
         state = state / np.max(state)               # Normalization
         state = state.astype(np.float32)            # Quantization
@@ -101,6 +101,8 @@ class DQNAgent(DeepAgent, object):
     def reset(self, init_state, *args, **kwargs):
         self._S = self._phi(init_state)
         self._A = self._select_action(self._S)
+        self._weights = np.linspace(0.4, 1, init_state.shape[-1])
+        self._weights = self._weights[None, None, ...]
 
     def _select_action(self, state: Any) -> None:
         action = np.zeros(self._actions, dtype=np.float32)
