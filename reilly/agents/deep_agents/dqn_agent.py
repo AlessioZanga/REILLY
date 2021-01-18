@@ -99,10 +99,10 @@ class DQNAgent(DeepAgent, object):
         self._A = self._select_action(self._S)
 
     def reset(self, init_state, *args, **kwargs):
-        self._S = self._phi(init_state)
-        self._A = self._select_action(self._S)
         self._weights = np.linspace(0.4, 1, init_state.shape[-1])
         self._weights = self._weights[None, None, ...]
+        self._S = self._phi(init_state)
+        self._A = self._select_action(self._S)
 
     def _select_action(self, state: Any) -> None:
         action = np.zeros(self._actions, dtype=np.float32)
