@@ -10,7 +10,7 @@ from .replay_memory import ReplayMemory
 
 class DQNAgent(DeepAgent, object):
 
-    __slots__ = ["_batch_size", "_replay_memory", "_replace_size", "_model_star", "_steps", "_weights"]
+    __slots__ = ["_batch_size", "_replay_memory", "_replace_size", "_model_star", "_steps", "_fading"]
 
     def __init__(
         self,
@@ -27,14 +27,15 @@ class DQNAgent(DeepAgent, object):
         *args,
         **kwargs
     ):
+        self._fading = np.linspace(0.4, 1, states[-1])
+        self._fading = self._fading[None, None, ...]
+        
         super().__init__(states, actions, alpha, epsilon, gamma, epsilon_decay)
         self._batch_size = batch_size
         self._replay_memory = ReplayMemory(replay_memory_max_size)
 
         self._steps = 0
         self._replace_size = replace_size
-        self._weights = np.linspace(0.4, 1, states[-1])
-        self._weights = self._weights[None, None, ...]
         self._model_star = self._build_model(states, actions)
 
         if load_model:
@@ -58,7 +59,7 @@ class DQNAgent(DeepAgent, object):
     
     def _phi(self, state: Any) -> Any:
         state = state[::2, ::2]                     # Downscale
-        state = np.sum(state, +2) * self._weights   # Grayscale and fading
+        state = np.sum(state, +2) * self._fading   # Grayscale and fading
         state = np.sum(state, -1)                   # History aggregation
         state = state / np.max(state)               # Normalization
         state = state.astype(np.float32)            # Quantization
@@ -87,7 +88,7 @@ class DQNAgent(DeepAgent, object):
 
             # Replace model if reached replace size
             if not self._steps % self._replace_size:
-                self._model_star.set_weights(self._model.get_weights())
+                self._model_star.set_fading(self._model.get_fading())
             # Increment global steps count
             self._steps += 1
 
