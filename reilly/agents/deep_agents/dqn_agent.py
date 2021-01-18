@@ -29,7 +29,7 @@ class DQNAgent(DeepAgent, object):
     ):
         self._fading = np.linspace(0.4, 1, states[-1])
         self._fading = self._fading[None, None, ...]
-        
+
         super().__init__(states, actions, alpha, epsilon, gamma, epsilon_decay)
         self._batch_size = batch_size
         self._replay_memory = ReplayMemory(replay_memory_max_size)
@@ -59,7 +59,7 @@ class DQNAgent(DeepAgent, object):
     
     def _phi(self, state: Any) -> Any:
         state = state[::2, ::2]                     # Downscale
-        state = np.sum(state, +2) * self._fading   # Grayscale and fading
+        state = np.sum(state, +2) * self._fading    # Grayscale and fading
         state = np.sum(state, -1)                   # History aggregation
         state = state / np.max(state)               # Normalization
         state = state.astype(np.float32)            # Quantization
@@ -88,7 +88,7 @@ class DQNAgent(DeepAgent, object):
 
             # Replace model if reached replace size
             if not self._steps % self._replace_size:
-                self._model_star.set_fading(self._model.get_fading())
+                self._model_star.set_weights(self._model.get_weights())
             # Increment global steps count
             self._steps += 1
 
