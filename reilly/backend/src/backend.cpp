@@ -35,6 +35,66 @@ PYBIND11_MODULE(backend, m) {
         )
         .def("__repr__", &Agent::__repr__);
     
+    py::class_<BernoulliArm>(m, "BernoulliArm")
+        .def_readonly("alpha", &BernoulliArm::alpha)
+        .def_readonly("beta", &BernoulliArm::beta)
+        .def_readonly("count", &BernoulliArm::count);
+    
+    py::class_<MultiArmedBandit<BernoulliArm>, PyBernoulliBandit, Agent>(m, "BernoulliBandit");
+
+    py::class_<GreedyBandit<BernoulliArm>, MultiArmedBandit<BernoulliArm>>(m, "BernoulliGreedyBandit", py::dynamic_attr())
+        .def(py::init<size_t>(), py::arg("arms"))
+        .def_readonly("arms", &GreedyBandit<BernoulliArm>::arms);
+    
+    py::class_<UCBBandit<BernoulliArm>, MultiArmedBandit<BernoulliArm>>(m, "BernoulliUCBBandit", py::dynamic_attr())
+        .def(py::init<size_t>(), py::arg("arms"))
+        .def_readonly("arms", &UCBBandit<BernoulliArm>::arms);
+    
+    py::class_<ThompsonSamplingBandit<BernoulliArm>, MultiArmedBandit<BernoulliArm>>(m, "BernoulliThompsonSamplingBandit", py::dynamic_attr())
+        .def(py::init<size_t>(), py::arg("arms"))
+        .def_readonly("arms", &ThompsonSamplingBandit<BernoulliArm>::arms);
+    
+    py::class_<DynamicBernoulliArm>(m, "DynamicBernoulliArm")
+        .def_readonly("alpha", &DynamicBernoulliArm::alpha)
+        .def_readonly("beta", &DynamicBernoulliArm::beta)
+        .def_readonly("count", &DynamicBernoulliArm::count);
+    
+    py::class_<MultiArmedBandit<DynamicBernoulliArm>, PyDynamicBernoulliBandit, Agent>(m, "DynamicBernoulliBandit");
+    
+    py::class_<ThompsonSamplingBandit<DynamicBernoulliArm>, MultiArmedBandit<DynamicBernoulliArm>>(m, "DynamicBernoulliThompsonSamplingBandit", py::dynamic_attr())
+        .def(py::init<size_t, float>(), py::arg("arms"), py::arg("gamma") = 1)
+        .def_readonly("arms", &ThompsonSamplingBandit<DynamicBernoulliArm>::arms);
+    
+    py::class_<DiscountedBernoulliArm>(m, "DiscountedBernoulliArm")
+        .def_readonly("alpha", &DiscountedBernoulliArm::alpha)
+        .def_readonly("beta", &DiscountedBernoulliArm::beta)
+        .def_readonly("count", &DiscountedBernoulliArm::count);
+    
+    py::class_<MultiArmedBandit<DiscountedBernoulliArm>, PyDiscountedBernoulliBandit, Agent>(m, "DiscountedBernoulliBandit");
+
+    py::class_<ThompsonSamplingBandit<DiscountedBernoulliArm>, MultiArmedBandit<DiscountedBernoulliArm>>(m, "DiscountedBernoulliThompsonSamplingBandit")
+        .def(py::init<size_t, float>(), py::arg("arms"), py::arg("gamma") = 1)
+        .def_readonly("arms", &ThompsonSamplingBandit<DiscountedBernoulliArm>::arms);
+    
+    py::class_<GaussianArm>(m, "GaussianArm")
+        .def_readonly("mu", &GaussianArm::mu)
+        .def_readonly("stddev", &GaussianArm::stddev)
+        .def_readonly("count", &GaussianArm::count);
+    
+    py::class_<MultiArmedBandit<GaussianArm>, PyGaussianBandit, Agent>(m, "GaussianBandit");
+
+    py::class_<GreedyBandit<GaussianArm>, MultiArmedBandit<GaussianArm>>(m, "GaussianGreedyBandit", py::dynamic_attr())
+        .def(py::init<size_t, float, float>(), py::arg("arms"), py::arg("gamma") = 1, py::arg("decay") = 1)
+        .def_readonly("arms", &GreedyBandit<GaussianArm>::arms);
+    
+    py::class_<UCBBandit<GaussianArm>, MultiArmedBandit<GaussianArm>>(m, "GaussianUCBBandit", py::dynamic_attr())
+        .def(py::init<size_t, float, float>(), py::arg("arms"), py::arg("gamma") = 1, py::arg("decay") = 1)
+        .def_readonly("arms", &UCBBandit<GaussianArm>::arms);
+    
+    py::class_<ThompsonSamplingBandit<GaussianArm>, MultiArmedBandit<GaussianArm>>(m, "GaussianThompsonSamplingBandit", py::dynamic_attr())
+        .def(py::init<size_t, float, float>(), py::arg("arms"), py::arg("gamma") = 1, py::arg("decay") = 1)
+        .def_readonly("arms", &ThompsonSamplingBandit<GaussianArm>::arms);
+    
     py::class_<TabularAgent, PyTabularAgent, Agent>(m, "TabularAgent");
     
     py::class_<MonteCarlo, PyMonteCarlo, TabularAgent>(m, "MonteCarlo");
@@ -208,14 +268,14 @@ PYBIND11_MODULE(backend, m) {
     
     py::class_<ApproximateAgent, PyApproximateAgent, Agent>(m, "ApproximateAgent")
         .def("reset", py::overload_cast<size_t>(&Agent::reset), py::arg("init_state"))
-        .def("reset", py::overload_cast<std::list<float>>(&ApproximateAgent::reset), py::arg("init_state"))
+        .def("reset", py::overload_cast<std::vector<float>>(&ApproximateAgent::reset), py::arg("init_state"))
         .def("reset", py::overload_cast<py::array>(&ApproximateAgent::reset), py::arg("init_state"))
         .def("update", py::overload_cast<size_t, float, bool, py::kwargs>(&Agent::update),
             py::arg("next_state"),
             py::arg("reward"),
             py::arg("done")
         )
-        .def("update", py::overload_cast<std::list<float>, float, bool, py::kwargs>(&ApproximateAgent::update),
+        .def("update", py::overload_cast<std::vector<float>, float, bool, py::kwargs>(&ApproximateAgent::update),
             py::arg("next_state"),
             py::arg("reward"),
             py::arg("done")

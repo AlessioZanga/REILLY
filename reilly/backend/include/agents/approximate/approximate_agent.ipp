@@ -25,7 +25,7 @@ void ApproximateAgent::reset(size_t init_state) {
     reset(vector_state);
 }
 
-void ApproximateAgent::reset(std::list<float> init_state) { reset(to_xtensor(init_state)); }
+void ApproximateAgent::reset(std::vector<float> init_state) { reset(to_xtensor(init_state)); }
 
 void ApproximateAgent::reset(py::array init_state) {
     auto np = init_state.unchecked<float, 1>();
@@ -41,7 +41,7 @@ void ApproximateAgent::update(size_t next_state, float reward, bool done, py::kw
     update(vector_state, reward, done, kwargs);
 }
 
-void ApproximateAgent::update(std::list<float> next_state, float reward, bool done, py::kwargs kwargs) {
+void ApproximateAgent::update(std::vector<float> next_state, float reward, bool done, py::kwargs kwargs) {
     update(to_xtensor(next_state), reward, done, kwargs);
 }
 
@@ -58,8 +58,8 @@ std::string ApproximateAgent::__repr__() {
     int status;
     std::stringstream out;
     char *demangled = abi::__cxa_demangle(typeid(*this).name(), 0, 0, &status);
-    out << "<" << demangled << "(alpha= " << alpha << "epsilon=" << epsilon << ", gamma=" << gamma;
-    out << ", epsilon_decay=" << epsilon_decay << ", estimator=" << estimator.__repr__();
+    out << "<" << demangled << "(alpha= " << alpha << ", epsilon=" << epsilon << ", gamma=" << gamma;
+    out << ", epsilon_decay=" << epsilon_decay << ", estimator=" << estimator.__repr__() << ")";
     return out.str();
 }
 

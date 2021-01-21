@@ -22,11 +22,63 @@ class PyAgent : public Agent {
     }
 };
 
+class PyBernoulliBandit : public MultiArmedBandit<BernoulliArm> {
+    public:
+     using MultiArmedBandit<BernoulliArm>::MultiArmedBandit;
+
+    void reset(size_t init_state) override { PYBIND11_OVERLOAD(void, MultiArmedBandit, reset, init_state); }
+    void update(size_t next_state, float reward, bool done, py::kwargs kwargs) override {
+        PYBIND11_OVERLOAD(void, Agent, update, next_state, reward, done, kwargs);
+    }
+    std::string __repr__() override {
+        PYBIND11_OVERLOAD(std::string, Agent, __repr__, );
+    }
+};
+
+class PyDynamicBernoulliBandit : public MultiArmedBandit<DynamicBernoulliArm> {
+    public:
+     using MultiArmedBandit<DynamicBernoulliArm>::MultiArmedBandit;
+
+    void reset(size_t init_state) override { PYBIND11_OVERLOAD(void, MultiArmedBandit, reset, init_state); }
+    void update(size_t next_state, float reward, bool done, py::kwargs kwargs) override {
+        PYBIND11_OVERLOAD(void, Agent, update, next_state, reward, done, kwargs);
+    }
+    std::string __repr__() override {
+        PYBIND11_OVERLOAD(std::string, Agent, __repr__, );
+    }
+};
+
+class PyDiscountedBernoulliBandit : public MultiArmedBandit<DiscountedBernoulliArm> {
+    public:
+     using MultiArmedBandit<DiscountedBernoulliArm>::MultiArmedBandit;
+
+    void reset(size_t init_state) override { PYBIND11_OVERLOAD(void, MultiArmedBandit, reset, init_state); }
+    void update(size_t next_state, float reward, bool done, py::kwargs kwargs) override {
+        PYBIND11_OVERLOAD(void, Agent, update, next_state, reward, done, kwargs);
+    }
+    std::string __repr__() override {
+        PYBIND11_OVERLOAD(std::string, Agent, __repr__, );
+    }
+};
+
+class PyGaussianBandit : public MultiArmedBandit<GaussianArm> {
+    public:
+     using MultiArmedBandit<GaussianArm>::MultiArmedBandit;
+
+    void reset(size_t init_state) override { PYBIND11_OVERLOAD(void, MultiArmedBandit, reset, init_state); }
+    void update(size_t next_state, float reward, bool done, py::kwargs kwargs) override {
+        PYBIND11_OVERLOAD(void, Agent, update, next_state, reward, done, kwargs);
+    }
+    std::string __repr__() override {
+        PYBIND11_OVERLOAD(std::string, Agent, __repr__, );
+    }
+};
+
 class PyTabularAgent : public TabularAgent {
    public:
     using TabularAgent::TabularAgent;
     
-    void reset(size_t init_state) override { PYBIND11_OVERLOAD(void, Agent, reset, init_state); }
+    void reset(size_t init_state) override { PYBIND11_OVERLOAD(void, TabularAgent, reset, init_state); }
     void update(size_t next_state, float reward, bool done, py::kwargs kwargs) override {
         PYBIND11_OVERLOAD(void, Agent, update, next_state, reward, done, kwargs);
     }
